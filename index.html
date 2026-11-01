@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<!-- ============================================================
+     CABEÇALHO DO DOCUMENTO
+     Configurações da página: codificação, responsividade,
+     título da aba e folha de estilos.
+     ============================================================ -->
+<head>
+    <!-- Codificação de caracteres (necessária para acentos e símbolos) -->
+    <meta charset="utf-8">
+
+    <!-- Ajusta a página à largura do dispositivo; "viewport-fit=cover"
+         permite usar a tela inteira em celulares com entalhe (notch) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <!-- Título exibido na aba do navegador -->
+    <title>Blocos — jogo estilo Blokus</title>
+
+    <!-- Estilos do jogo (cores, tabuleiro, peças, telas e animações) -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+
+<!-- ============================================================
+     CORPO DO DOCUMENTO
+     Todo o conteúdo visível. As telas de menu inicial, fim de
+     jogo, tutorial e demais painéis são criadas dinamicamente
+     pelo script (js/script.js).
+     ============================================================ -->
+<body>
+
+    <main>
+
+        <!-- ======================================================
+             ÁREA DO TABULEIRO (coluna principal)
+             O script preenche o elemento #board com as 400 células
+             (grade de 20 x 20) onde as peças são encaixadas.
+             ====================================================== -->
+        <div>
+            <div class="card">
+                <div id="board"></div>
+            </div>
+        </div>
+
+
+        <!-- ======================================================
+             PAINEL LATERAL
+             Placar, mensagens de status, bandeja de peças,
+             controles e instruções.
+             ====================================================== -->
+        <div class="card">
+
+            <!-- Título do jogo -->
+            <h1>Blocos</h1>
+
+            <!-- Placar: quadrados restantes de cada cor (preenchido pelo script) -->
+            <div id="score"></div>
+
+            <!-- Mensagem de status: vez do jogador, fim de jogo etc. (preenchida pelo script) -->
+            <div id="status"></div>
+
+            <!-- Bandeja: peças disponíveis do jogador da vez (preenchida pelo script) -->
+            <div id="tray"></div>
+
+
+            <!-- ---------- CONTROLES DA PARTIDA ---------- -->
+            <div class="row">
+
+                <!-- Manipulação da peça selecionada -->
+                <button id="rot">Girar (R)</button>
+                <button id="flip">Espelhar (F)</button>
+
+                <!-- Ajudas ao jogador -->
+                <button id="hint">Dica</button>
+                <button id="undo">Desfazer</button>
+
+                <!-- Opções de exibição: marcação dos cantos disponíveis e símbolos nas peças -->
+                <button id="cor">Cantos</button>
+                <button id="sym">Símbolos</button>
+
+                <!-- Quantidade de jogadores humanos (as demais cores são controladas pela CPU) -->
+                <select id="hum">
+                    <option value="1">1 humano + 3 CPU</option>
+                    <option value="2">2 humanos + 2 CPU</option>
+                    <option value="3">3 humanos + 1 CPU</option>
+                    <option value="4">4 humanos</option>
+                </select>
+
+                <!-- Volta ao menu inicial para começar uma nova partida -->
+                <button id="new">Novo jogo</button>
+            </div>
+
+
+            <!-- ---------- CONTROLES DE VOLUME ---------- -->
+            <div class="row" style="margin-top:10px">
+                <label class="vol">
+                    Música
+                    <input id="vm" type="range" min="0" max="100" value="100">
+                </label>
+                <label class="vol">
+                    Efeitos
+                    <input id="vf" type="range" min="0" max="100" value="100">
+                </label>
+            </div>
+
+
+            <!-- ---------- INSTRUÇÕES ---------- -->
+
+            <!-- Regras resumidas do jogo -->
+            <p class="hint">
+                Cada peça deve tocar uma peça da sua cor apenas pelos cantos, nunca pelos lados.
+                A primeira peça deve cobrir o seu canto inicial (marcado no tabuleiro).
+                Vence quem restar com menos quadrados.
+            </p>
+
+            <!-- Guia do controle (gamepad): oculto por padrão;
+                 o script o exibe quando um controle é conectado -->
+            <p class="hint" id="gph" style="display:none">
+                🎮 Controle: direcional escolhe a peça · A entra no tabuleiro e coloca · B volta/cancela ·
+                direcional/analógico move a peça no tabuleiro · X gira · Y espelha ·
+                LB/RB trocam de peça · LT/RT pulam entre cantos · Select desfaz · Start dica.
+            </p>
+
+        </div>
+
+    </main>
+
+
+    <!-- ============================================================
+         SCRIPT DO JOGO
+         Lógica completa: regras, jogadas da CPU, música, salvamento,
+         controle (gamepad) e criação das telas dinâmicas.
+         Fica no final do corpo para que os elementos acima já
+         existam quando o código for executado.
+         ============================================================ -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>
