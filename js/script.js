@@ -227,14 +227,34 @@ function moves(p, one) {
 // Quantidade de quadrados que a cor p ainda não colocou no tabuleiro.
 const rem = p => PCS.reduce((s, q, i) => s + (used[p].has(i) ? 0 : q.n), 0);
 
+// pt = posição exata do ponteiro sobre o tabuleiro, em unidades de célula (null se fora do tabuleiro).
+let pt = null;
+
 /**
- * Converte a célula sob o ponteiro (hover) na posição do canto superior esquerdo da peça, centralizando-a.
+ * Atualiza "pt" a partir de um evento de ponteiro (mouse ou toque).
+ *
+ * @param {PointerEvent} e - Evento com clientX/clientY.
+ */
+function setPt(e) {
+    const r = B.getBoundingClientRect(), cs = B.clientWidth / N;
+    const x = (e.clientX - r.left - B.clientLeft) / cs,
+        y = (e.clientY - r.top - B.clientTop) / cs;
+    pt = (x >= 0 && y >= 0 && x < N && y < N) ? { x, y } : null;
+}
+
+/**
+ * Converte a posição apontada na posição do canto superior esquerdo da peça, centralizando-a no ponteiro.
+ *
+ * Com mouse ou toque, usa a posição exata do ponteiro (vale para peças de largura/altura par ou ímpar);
+ * com teclado, controle ou dica, usa a célula em "hover".
  *
  * @param {Object} o - Orientação da peça.
  * @returns {number[]} Par [linha, coluna].
  */
 function anchor(o) {
-    // Centraliza a peça na célula apontada.
+    if (pt && Math.floor(pt.y) * N + Math.floor(pt.x) === hover)
+        return [Math.round(pt.y - o.h / 2), Math.round(pt.x - o.w / 2)];
+    // Teclado, controle e dica: centraliza na célula apontada.
     const r = Math.floor(hover / N) - Math.floor(o.h / 2), c = hover % N - Math.floor(o.w / 2);
     return [r, c];
 }
@@ -245,7 +265,7 @@ function anchor(o) {
  * Só age na vez de um humano, com peça selecionada e ponteiro sobre o tabuleiro.
  */
 function click() {
-    if (over || sel === null || hover === null || !isH(cur)) return;
+    if (over || sel === null || hover === null || !mine(cur)) return;
     const o = getO(sel), [r, c] = anchor(o);
     if (valid(cur, o, r, c)) place(cur, sel, o, r, c);
     else bad();
@@ -689,7 +709,9 @@ function snd() {
  * @param {number} r - Linha do canto superior esquerdo.
  * @param {number} c - Coluna do canto superior esquerdo.
  */
-function place(p, i, o, r, c) {
+function place(p, i, o, r, c, remote) {
+    // Online: envia a jogada própria (ou da CPU, se for o anfitrião) aos demais jogadores.
+    if (net.on && !remote) net.send({ t: 'move', p, i, r, c, k: o.k });
     // Guarda o estado anterior para o "Desfazer".
     snaps.push({
         b: board.slice(),
@@ -763,7 +785,8 @@ function aviso(p) {
  * Faz a CPU jogar (após 0,4 s) escolhendo o lance de maior pontuação segundo a dificuldade.
  */
 function ai() {
-    if (over || isH(cur)) return;
+    // Online: só o anfitrião calcula as jogadas das CPUs.
+    if (over || isH(cur) || (net.on && !net.host)) return;
     const g = gen;
     // A CPU "pensa" por 0,4 s; "g" cancela a jogada se uma nova partida começar nesse intervalo.
     setTimeout(() => {
@@ -806,9 +829,9 @@ function paint() {
         if (!v) for (let p = 1; p <= 4; p++) if (!started[p] && START[p][0] * N + START[p][1] === i) d.style.boxShadow = 'inset 0 0 0 3px ' + COL[p];
     }
     // Pontos nos cantos onde a próxima peça pode encostar.
-    if (!over && showC && isH(cur)) for (const k of corners(cur)) cells[k].style.background = `radial-gradient(circle,${COL[cur]} 0 20%,transparent 24%),var(--cell)`;
+    if (!over && showC && mine(cur)) for (const k of corners(cur)) cells[k].style.background = `radial-gradient(circle,${COL[cur]} 0 20%,transparent 24%),var(--cell)`;
     // Prévia da peça: colorida se válida, cinza se inválida.
-    if (!over && hover !== null && sel !== null && isH(cur)) {
+    if (!over && hover !== null && sel !== null && mine(cur)) {
         const o = getO(sel), [r, c] = anchor(o), ok = valid(cur, o, r, c);
         for (const [y, x] of o.cells) {
             const Y = y + r, X = x + c;
@@ -837,7 +860,7 @@ function ui() {
         return;
     }
     st.innerHTML = `Vez do <span style="color:${COL[cur]}">${NM[cur]}</span>` + (isH(cur) ? '' : ' (CPU pensando…)');
-    if (!isH(cur)) return;
+    if (!mine(cur)) return;
     // Bandeja: desenha cada peça ainda disponível do jogador da vez.
     for (let i = 0; i < 21; i++) {
         if (used[cur].has(i)) continue;
@@ -933,19 +956,27 @@ $('#vf').oninput = e => {
     sset();
 };
 
+// Posição exata do ponteiro: atualizada em toda interação, para centralizar a peça no cursor.
+addEventListener('pointerdown', setPt);
+
 // Arrastar e soltar: acompanha o ponteiro, mostra a prévia e, ao soltar sobre o tabuleiro, tenta encaixar.
 addEventListener('pointermove', e => {
-    if (!drag) return;
-    const k = cells.indexOf(document.elementFromPoint(e.clientX, e.clientY));
-    if (k >= 0 && k !== hover) {
-        hover = k;
+    setPt(e);
+    if (drag) {
+        const k = cells.indexOf(document.elementFromPoint(e.clientX, e.clientY));
+        if (k >= 0) hover = k;
         paint();
+    } else if (pt) {
+        // Sem arrastar: a prévia acompanha o mouse e se atualiza também dentro da mesma célula.
+        hover = Math.floor(pt.y) * N + Math.floor(pt.x);
+        if (sel !== null) paint();
     }
 });
 
 addEventListener('pointerup', e => {
     if (!drag) return;
     drag = false;
+    setPt(e);
     const k = cells.indexOf(document.elementFromPoint(e.clientX, e.clientY));
     if (k >= 0 && sel !== null) {
         hover = k;
@@ -965,7 +996,7 @@ addEventListener('keydown', e => {
     if (k === 'r') tf(1, 0);
     if (k === 'f') tf(0, 1);
     const mv = { arrowup: [-1, 0], arrowdown: [1, 0], arrowleft: [0, -1], arrowright: [0, 1] }[k];
-    if (mv && sel !== null && isH(cur)) {
+    if (mv && sel !== null && mine(cur)) {
         e.preventDefault();
         const h = hover === null ? N * N / 2 + N / 2 : hover,
             y = Math.max(0, Math.min(N - 1, Math.floor(h / N) + mv[0])),
@@ -993,6 +1024,8 @@ addEventListener('keydown', e => {
  * Inicia uma nova partida: reinicia todo o estado, define os jogadores humanos e começa a música da partida.
  */
 function init() {
+    // Online: a partida só (re)começa por ordem do servidor.
+    if (net.on && !net.go) return;
     gen++;
     hideEnd();
     music('game');
@@ -1010,6 +1043,8 @@ function init() {
     over = false;
     humans = +$('#hum').value;
     HS = Array.from({ length: humans }, (_, k) => (mc - 1 + k) % 4 + 1);
+    // Online: humanos são as cores com jogador conectado; as demais são CPUs.
+    if (net.on) HS = net.seats.map((s, k) => s ? k + 1 : 0).filter(Boolean);
     paint();
     ui();
     ai();
@@ -1094,6 +1129,7 @@ function stt() {
  * Salva a partida em andamento; se ela terminou, remove o salvamento e atualiza as estatísticas.
  */
 function sv() {
+    if (net.on) return;
     try {
         if (over) {
             localStorage.removeItem('blocos_g');
@@ -1233,7 +1269,7 @@ function evalM(p, m) {
  * Mostra uma jogada sugerida (avaliada no nível difícil): seleciona a peça, ajusta rotação/espelhamento e posiciona a prévia.
  */
 function hint() {
-    if (over || !isH(cur)) return;
+    if (over || !mine(cur)) return;
     const ms = moves(cur);
     if (!ms.length) return;
     const d0 = dif;
@@ -1265,7 +1301,7 @@ function hint() {
  * Desfaz a última jogada humana (e as jogadas da CPU feitas depois dela).
  */
 function undo() {
-    if (over) return;
+    if (over || net.on) return;
     let s = null;
     // Volta ao último estado em que era a vez de um humano.
     while (snaps.length) {
@@ -1406,6 +1442,11 @@ function showEnd() {
         e.classList.remove('off');
         music('end');
         $('#again').onclick = () => {
+            if (net.on) {
+                if (net.host) net.send({ t: 'start', dif });
+                else tst('Aguarde o anfitrião reiniciar a partida.');
+                return;
+            }
             e.classList.add('off');
             init();
         };
@@ -1419,6 +1460,7 @@ function showEnd() {
  */
 function intro() {
     gen++;
+    netLeave();
     hideEnd();
     music('menu');
     let o = $('#intro');
@@ -1426,13 +1468,14 @@ function intro() {
     if (!o) {
         o = document.createElement('div');
         o.id = 'intro';
-        o.innerHTML = `<div class="ib"><div class="logo">${[1,2,4,3].map(p=>`<i style="background:${COL[p]}"></i>`).join('')}</div><h1>Blocos</h1><p>Encaixe as suas 21 peças no tabuleiro e ocupe o máximo de espaço possível.</p><div class="pick"><small>Escolha a sua cor</small><div id="pk">${[1,2,3,4].map(p=>`<button class="sw" data-c="${p}" style="background:${COL[p]}" title="${NM[p]}"></button>`).join('')}</div></div><div class="pick"><small>Dificuldade da CPU</small><div class="seg"><button class="df" data-d="facil">Fácil</button><button class="df" data-d="medio">Médio</button><button class="df" data-d="dificil">Difícil</button></div></div><div class="mode" id="m1"><button id="rs" style="display:none">Continuar partida<small>retomar de onde parou</small></button><button data-h="1">1 jogador<small>contra 3 CPUs</small></button><button id="mp">Multiplayer local<small>2 a 4 jogadores no mesmo dispositivo</small></button></div><div class="mode" id="m2"><button data-h="2">2 jogadores<small>mais 2 CPUs</small></button><button data-h="3">3 jogadores<small>mais 1 CPU</small></button><button data-h="4">4 jogadores<small>sem CPUs, revezando a vez</small></button><button id="back">Voltar</button></div><p id="stt" class="stt"></p><button id="how">Como jogar</button><ul><li>A primeira peça deve cobrir o seu canto inicial.</li><li>As peças seguintes tocam as suas apenas pelos cantos, nunca pelos lados.</li><li>Quem terminar com menos quadrados sobrando vence.</li></ul></div>`;
+        o.innerHTML = `<div class="ib"><div class="logo">${[1,2,4,3].map(p=>`<i style="background:${COL[p]}"></i>`).join('')}</div><h1>Blocos</h1><p>Encaixe as suas 21 peças no tabuleiro e ocupe o máximo de espaço possível.</p><div class="pick"><small>Escolha a sua cor</small><div id="pk">${[1,2,3,4].map(p=>`<button class="sw" data-c="${p}" style="background:${COL[p]}" title="${NM[p]}"></button>`).join('')}</div></div><div class="pick"><small>Dificuldade da CPU</small><div class="seg"><button class="df" data-d="facil">Fácil</button><button class="df" data-d="medio">Médio</button><button class="df" data-d="dificil">Difícil</button></div></div><div class="mode" id="m1"><button id="rs" style="display:none">Continuar partida<small>retomar de onde parou</small></button><button data-h="1">1 jogador<small>contra 3 CPUs</small></button><button id="mp">Multiplayer local<small>2 a 4 jogadores no mesmo dispositivo</small></button><button id="onl">Jogar online<small>até 4 jogadores, por código</small></button></div><div class="mode" id="m2"><button data-h="2">2 jogadores<small>mais 2 CPUs</small></button><button data-h="3">3 jogadores<small>mais 1 CPU</small></button><button data-h="4">4 jogadores<small>sem CPUs, revezando a vez</small></button><button id="back">Voltar</button></div><p id="stt" class="stt"></p><button id="how">Como jogar</button><ul><li>A primeira peça deve cobrir o seu canto inicial.</li><li>As peças seguintes tocam as suas apenas pelos cantos, nunca pelos lados.</li><li>Quem terminar com menos quadrados sobrando vence.</li></ul></div>`;
         document.body.appendChild(o);
         o.querySelectorAll('[data-h]').forEach(b => b.onclick = () => {
             $('#hum').value = b.dataset.h;
             o.classList.add('off');
             init();
         });
+        $('#onl').onclick = lobby;
         $('#mp').onclick = () => {
             $('#m1').style.display = 'none';
             $('#m2').style.display = '';
@@ -1468,7 +1511,10 @@ function intro() {
    Liga os últimos eventos, carrega preferências e abre o menu inicial.
    ========================================================================== */
 
-$('#new').onclick = intro;
+$('#new').onclick = () => {
+    if (net.on && !confirm('Sair da sala online?')) return;
+    intro();
+};
 $('#hum').onchange = init;
 loadS();
 init();
@@ -1541,7 +1587,7 @@ function gpOv() {
  * @param {number} d - Direção (1 = próxima, -1 = anterior).
  */
 function gpPc(d) {
-    if (over || !isH(cur)) return;
+    if (over || !mine(cur)) return;
     const a = [];
     for (let i = 0; i < 21; i++) if (!used[cur].has(i)) a.push(i);
     if (!a.length) return;
@@ -1592,7 +1638,7 @@ function gpTray(dy) {
  * @param {number} dx - Deslocamento horizontal.
  */
 function gpMove(dy, dx) {
-    if (over || !isH(cur)) return;
+    if (over || !mine(cur)) return;
     if (sel === null || gpM === 'tray') {
         if (dy) gpTray(dy);
         else if (dx) gpPc(dx);
@@ -1612,7 +1658,7 @@ function gpMove(dy, dx) {
  * @param {number} d - Direção (1 = próximo, -1 = anterior).
  */
 function gpCor(d) {
-    if (over || sel === null || !isH(cur)) return;
+    if (over || sel === null || !mine(cur)) return;
     const c = corners(cur);
     if (!c.length) return;
     gc = ((gc + d) % c.length + c.length) % c.length;
@@ -1661,7 +1707,7 @@ function gpAct(k) {
             gpMove(0, 1);
             break;
         case 'a':
-            if (!isH(cur)) break;
+            if (!mine(cur)) break;
             if (sel === null) gpM = 'tray';
             if (gpM === 'tray') {
                 if (sel === null) gpPc(1);
