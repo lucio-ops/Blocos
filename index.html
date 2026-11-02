@@ -81,11 +81,15 @@
 
     </main>
 
+    <script src="js/online.js"></script>
     <script src="js/script.js"></script>
 
     <!-- Ligação dos botões de pausa e reinício às funções do jogo (intro e init, definidas em script.js) -->
     <script>
-        document.getElementById('pz').onclick = () => intro();
+        document.getElementById('pz').onclick = () => {
+            if (net.on && !confirm('Sair da sala online?')) return;
+            intro();
+        };
         document.getElementById('rst').onclick = () => init();
     </script>
 
