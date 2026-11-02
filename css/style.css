@@ -453,7 +453,7 @@ body:has(#intro:not(.off)) .rb { display: none; }
 .ib ul { text-align: left; color: var(--mt); font-size: 14px; padding-left: 20px; margin: 0; }
 
 /* 7. FIM DE JOGO E TUTORIAL ------------------------------------------------- */
-#end, #tut {
+#end, #tut, #lob {
     position: fixed;
     inset: 0;
     display: flex;
@@ -541,3 +541,10 @@ body.gpm button:focus, body.gpm .pc:focus { outline: 3px solid #2f6fdb; outline-
 .gpg button.on { background: var(--tx); color: var(--bg); }
 .gpd { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; font-size: 11px; border-radius: 5px; background: var(--cell); margin: 1px; }
 .gpd.on { background: #2f6fdb; color: #fff; }
+
+/* 9. MULTIPLAYER ONLINE ---------------------------------------------------- */
+#lob { z-index: 45; }
+#onl { background: linear-gradient(#c58cff,#7a3fd0); border-color: #55269a; }
+.code { display: inline-block; margin: 8px 0; padding: 4px 18px; font-size: 48px; font-weight: 700; letter-spacing: .2em; color: #5a2d0c; background: linear-gradient(#fff3b0,#f7c948); border-radius: 16px; }
+.lseats { display: grid; gap: 6px; margin: 12px 0; text-align: left; font-weight: 600; }
+#lcode { font: inherit; font-weight: 600; width: 9ch; padding: 8px; text-align: center; text-transform: uppercase; letter-spacing: .2em; border: 3px solid var(--bd); border-radius: 14px; background: var(--b1); color: var(--tx); }
