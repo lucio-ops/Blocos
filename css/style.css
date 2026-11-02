@@ -1,795 +1,253 @@
 /* ==========================================================================
-   BLOCOS — FOLHA DE ESTILOS
-   Aparência do jogo: tema claro/escuro, tabuleiro, peças, telas (inicial, final e tutorial),
-   botões de som/trilhas e painel do controle.
-
-   Observação: as regras foram apenas formatadas e comentadas. A ORDEM ORIGINAL foi mantida,
-   pois em CSS a regra que vem depois prevalece sobre outra de mesma especificidade.
+   BLOCOS — FOLHA DE ESTILOS (visual "papelão e madeira", inspirado em Cut the Rope)
+   Mantém todos os ids e classes usados por js/script.js; nenhuma alteração no script é necessária.
    ========================================================================== */
 
-/* ==========================================================================
-   1. VARIÁVEIS CSS E TEMAS CLARO/ESCURO
-   Cores do tema, definidas como variáveis (--nome) e usadas com var(--nome) em todo o arquivo.
-   ========================================================================== */
-
-/* Tema claro (padrão). --bg: fundo da página; --sf: superfície dos cartões; --tx: texto; --mt: texto secundário; --ln: linhas e bordas; --cell: células vazias. */
+/* 1. TEMAS ---------------------------------------------------------------
+   --bg fundo | --sf pergaminho | --tx texto | --mt texto secundário | --ln bordas | --cell célula vazia
+   --b1/--b2 gradiente dos botões | --bd borda dos botões | --sh sombra 3D dos botões */
 :root {
-    --bg: #f4f1ea;
-    --sf: #fff;
-    --tx: #222;
-    --mt: #6b665c;
-    --ln: #d8d2c4;
-    --cell: #ece7da;
-    /* Informa ao navegador que a página suporta tema claro e escuro (barras de rolagem e controles nativos acompanham). */
+    --bg: #eaa650;
+    --sf: #fff1cf;
+    --tx: #5a2d0c;
+    --mt: #9a6b3a;
+    --ln: #c98a45;
+    --cell: #f6dcaa;
+    --b1: #fff6dc;
+    --b2: #f6d796;
+    --bd: #d9a15a;
+    --sh: #c98a45;
+    --wood1: #c98242;
+    --wood2: #a8652b;
     color-scheme: light dark;
     box-sizing: border-box;
-    /* Respeita as áreas seguras do aparelho (entalhe e barras do sistema) no topo e na base. */
     padding-top: env(safe-area-inset-top,0px);
     padding-bottom: env(safe-area-inset-bottom,0px);
 }
 
-/* Preferência do sistema por tema escuro. */
 @media (prefers-color-scheme: dark) {
-    /* Tema escuro automático: vale quando o sistema está em modo escuro, a menos que a página force o tema claro. */
     :root:not([data-theme="light"]) {
-        --bg: #17181b;
-        --sf: #222428;
-        --tx: #ece9e2;
-        --mt: #9a968c;
-        --ln: #3a3d43;
-        --cell: #2c2e33;
+        --bg: #3b2415; --sf: #5a3a22; --tx: #ffeccb; --mt: #d1a977; --ln: #8a5a30; --cell: #6e4a2c;
+        --b1: #7a5232; --b2: #5f3e24; --bd: #9a6a3c; --sh: #2e1a0c; --wood1: #7a4a22; --wood2: #5e381a;
     }
 }
 
-/* Tema escuro forçado (data-theme="dark"), com as mesmas cores do modo automático. */
 :root[data-theme="dark"] {
-    --bg: #17181b;
-    --sf: #222428;
-    --tx: #ece9e2;
-    --mt: #9a968c;
-    --ln: #3a3d43;
-    --cell: #2c2e33;
+    --bg: #3b2415; --sf: #5a3a22; --tx: #ffeccb; --mt: #d1a977; --ln: #8a5a30; --cell: #6e4a2c;
+    --b1: #7a5232; --b2: #5f3e24; --bd: #9a6a3c; --sh: #2e1a0c; --wood1: #7a4a22; --wood2: #5e381a;
 }
 
-/* ==========================================================================
-   2. BASE DO DOCUMENTO E LAYOUT PRINCIPAL
-   Corpo da página, contêiner principal, título e cartões.
-   ========================================================================== */
+/* 2. BASE E LAYOUT -------------------------------------------------------- */
+html, body { height: auto; }
 
-/* Altura definida pelo conteúdo. */
-html,
-body {
-    height: auto;
-}
-
-/* Corpo da página: sem margem, cores do tema e fonte do sistema (15px, entrelinha 1.4). */
 body {
     margin: 0;
-    background: var(--bg);
     color: var(--tx);
-    font: 15px/1.4 system-ui,sans-serif;
+    font: 16px/1.4 'Fredoka','Baloo 2','Trebuchet MS',system-ui,sans-serif;
+    min-height: 100vh;
+    /* Papelão: brilho central, vinheta e estrelas discretas. */
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cpath d='M70 30l11 22 24 4-17 17 4 24-22-12-22 12 4-24-17-17 24-4z' fill='%23fff' fill-opacity='.09'/%3E%3Cpath d='M230 190l8 16 18 3-13 12 3 18-16-9-16 9 3-18-13-12 18-3z' fill='%23000' fill-opacity='.06'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.28),transparent 60%),
+        radial-gradient(ellipse at 50% 120%,rgba(90,40,0,.35),transparent 60%),
+        var(--bg);
 }
 
-/* Contêiner principal: grade de uma coluna (celulares), centralizada, com largura máxima de 1000px. */
 main {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: auto;
-    padding: 12px;
+    padding: 64px 12px 12px;
     display: grid;
-    gap: 12px;
+    gap: 16px;
     grid-template-columns: minmax(0,1fr);
 }
 
-/* Telas largas (a partir de 820px): duas colunas, tabuleiro (até 580px) e painel lateral, alinhados ao topo. */
 @media (min-width: 820px) {
-    main {
-        grid-template-columns: minmax(0,580px) 1fr;
-        align-items: start;
-    }
+    main { grid-template-columns: minmax(0,600px) 1fr; align-items: start; }
 }
 
-/* Título do painel: tamanho e margens iniciais. */
-h1 {
-    font-size: 18px;
-    margin: 0 0 4px;
-}
-
-/* Cartão: bloco com fundo, borda e cantos arredondados (envolve o tabuleiro e o painel). */
+/* Painel lateral: pergaminho com borda tracejada interna. */
 .card {
-    background: var(--sf);
-    border: 1px solid var(--ln);
-    border-radius: 10px;
-    padding: 12px;
+    background: linear-gradient(var(--sf),color-mix(in srgb,var(--sf) 88%,#e8a850));
+    border: 4px solid var(--ln);
+    border-radius: 22px;
+    padding: 16px;
+    box-shadow: 0 12px 24px -12px rgba(60,20,0,.6), inset 0 0 0 2px rgba(255,255,255,.35);
+    outline: 2px dashed color-mix(in srgb,var(--ln) 70%,transparent);
+    outline-offset: -11px;
 }
 
-/* ==========================================================================
-   3. COMPONENTES DO JOGO (VERSÃO INICIAL)
-   Tabuleiro, placar, status, bandeja de peças, botões, textos de ajuda e aviso temporário.
-   ========================================================================== */
+/* Moldura de madeira do tabuleiro (primeiro cartão do main). */
+main > div:first-child .card {
+    background: linear-gradient(135deg,var(--wood1),var(--wood2));
+    border: 5px solid #8a4e1c;
+    padding: 14px;
+    outline: none;
+    box-shadow: 0 14px 28px -12px rgba(60,20,0,.7), inset 0 0 0 3px rgba(255,220,160,.35), inset 0 -6px 0 rgba(0,0,0,.18);
+}
 
-/* Tabuleiro: grade 20×20; o fundo (--ln) aparece nos vãos e forma as linhas entre as células. */
+h1 {
+    display: flex;
+    align-items: center;
+    margin: 0 0 12px;
+    font-size: 34px;
+    letter-spacing: -.01em;
+    text-shadow: 0 2px 0 rgba(255,255,255,.5);
+}
+
+/* Ícone do título: quatro quadrados coloridos em relevo. */
+h1::before {
+    content: '';
+    width: 44px;
+    height: 44px;
+    margin-right: 12px;
+    border-radius: 10px;
+    background: conic-gradient(from 90deg,#e8b923 0 25%,#2fa35b 0 50%,#2f6fdb 0 75%,#d94141 0);
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,.4), inset 0 -5px 0 rgba(0,0,0,.2), 0 4px 8px rgba(0,0,0,.3);
+    border: 2px solid #fff6dc;
+}
+
+/* 3. TABULEIRO ------------------------------------------------------------ */
 #board {
     display: grid;
     grid-template-columns: repeat(20,minmax(0,1fr));
-    gap: 1px;
-    background: var(--ln);
-    border: 2px solid var(--ln);
-    /* Mantém o tabuleiro sempre quadrado. */
+    gap: 2px;
+    background: #d9a85e;
+    border: 3px solid #8a4e1c;
+    border-radius: 8px;
     aspect-ratio: 1;
     width: 100%;
-    /* Evita o zoom por toque duplo sobre o tabuleiro. */
-    touch-action: manipulation;
-}
-
-/* Células do tabuleiro (criadas pelo script). */
-#board div {
-    background: var(--cell);
-}
-
-/* Placar: quatro cartões lado a lado, um por cor. */
-#score {
-    display: grid;
-    grid-template-columns: repeat(4,1fr);
-    gap: 6px;
-    margin-bottom: 10px;
-}
-
-/* Cartão de um jogador no placar. */
-.sc {
-    border: 2px solid var(--ln);
-    border-radius: 8px;
-    padding: 6px;
-    text-align: center;
-    font-size: 13px;
-}
-
-/* Quadrados restantes (número em destaque). */
-.sc b {
-    display: block;
-    font-size: 18px;
-}
-
-/* Jogador da vez: borda destacada. */
-.sc.on {
-    border-color: var(--tx);
-}
-
-/* Jogador sem lances: aparência esmaecida. */
-.sc.out {
-    opacity: .5;
-}
-
-/* Mensagem de status (vez do jogador, fim de jogo). */
-#status {
-    font-weight: 600;
-    margin: 6px 0 10px;
-    min-height: 22px;
-}
-
-/* Bandeja de peças: dispostas em linha, com quebra automática. */
-#tray {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 10px;
-}
-
-/* Peça na bandeja: grade de miniquadrados. */
-.pc {
-    display: grid;
-    gap: 0;
-    /* Linhas de altura fixa: impedem que a peça seja esticada pelo layout da bandeja. */
-    grid-auto-rows: 11px;
-    align-content: start;
-    /* Evita que a peça seja esticada na altura quando está ao lado de peças maiores. */
-    align-self: flex-start;
-    padding: 5px;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    background: var(--cell);
-    cursor: pointer;
-}
-
-/* Miniquadrado de uma peça. */
-.pc i {
-    width: 11px;
-    height: 11px;
-    display: block;
-}
-
-/* Peça selecionada: borda destacada. */
-.pc.sel {
-    border-color: var(--tx);
-}
-
-/* Peça já usada: oculta. */
-.pc.used {
-    display: none;
-}
-
-/* Linha flexível de botões e controles, com quebra e espaçamento. */
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-
-/* Aparência base de botões e listas de seleção. */
-button,
-select {
-    font: inherit;
-    padding: 7px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--ln);
-    background: var(--sf);
-    color: var(--tx);
-    cursor: pointer;
-}
-
-/* Texto de ajuda (regras e guia do controle). */
-.hint {
-    color: var(--mt);
-    font-size: 13px;
-    margin-top: 10px;
-}
-
-/* Aviso temporário no rodapé da tela; fica invisível até receber a classe .on. */
-#toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(16px + env(safe-area-inset-bottom,0px));
-    transform: translate(-50%,20px);
-    background: var(--tx);
-    color: var(--bg);
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    opacity: 0;
-    /* O aviso nunca bloqueia cliques. */
-    pointer-events: none;
-    transition: .25s;
-    z-index: 9;
-    max-width: 90vw;
-    text-align: center;
-}
-
-/* Aviso visível: sobe e aparece. */
-#toast.on {
-    opacity: 1;
-    transform: translate(-50%,0);
-}
-
-/* ==========================================================================
-   4. TELA INICIAL (VERSÃO INICIAL)
-   Camada de abertura com logotipo, botões de modo e regras.
-   ========================================================================== */
-
-/* Tela inicial: camada que cobre a janela inteira e centraliza o conteúdo. */
-#intro {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
-    /* Permite rolar a tela inicial em telas pequenas. */
-    overflow: auto;
-    transition: opacity .25s;
-}
-
-/* Tela inicial oculta: transparente e sem receber cliques. */
-#intro.off {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Caixa de conteúdo da tela inicial. */
-.ib {
-    max-width: 420px;
-    text-align: center;
-    margin: auto;
-}
-
-/* Logotipo: grade 2×2 de quadrados coloridos. */
-.logo {
-    display: grid;
-    grid-template-columns: repeat(2,34px);
-    gap: 3px;
-    width: 71px;
-    margin: 0 auto 14px;
-}
-
-/* Quadrado do logotipo. */
-.logo i {
-    width: 34px;
-    height: 34px;
-    border-radius: 4px;
-}
-
-/* Título da tela inicial. */
-.ib h1 {
-    font-size: 36px;
-    margin: 0 0 6px;
-}
-
-/* Texto descritivo da tela inicial. */
-.ib p {
-    color: var(--mt);
-    margin: 0;
-}
-
-/* Grupo de botões de modo de jogo. */
-.mode {
-    display: grid;
-    gap: 8px;
-    margin: 20px 0;
-}
-
-/* Botão de modo de jogo. */
-.mode button {
-    padding: 12px;
-    font-weight: 600;
-    font-size: 16px;
-}
-
-/* Legenda dentro do botão de modo. */
-.mode small {
-    display: block;
-    font-weight: 400;
-    color: var(--mt);
-}
-
-/* Lista de regras da tela inicial. */
-.ib ul {
-    text-align: left;
-    color: var(--mt);
-    font-size: 14px;
-    padding-left: 20px;
-    margin: 0;
-}
-
-/* ==========================================================================
-   5. REFINAMENTO VISUAL
-   As regras desta seção repetem seletores definidos acima e os complementam ou substituem:
-   em CSS, quando duas regras têm a mesma especificidade, a que vem depois prevalece. Por isso a
-   ordem original foi mantida (reordenar mudaria a aparência).
-   ========================================================================== */
-
-/* Fundo com gradiente radial sutil, fonte Inter (com alternativas do sistema) e altura mínima igual à da janela. */
-body {
-    font-family: Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
-    background: radial-gradient(1200px 600px at 10% -10%,color-mix(in srgb,var(--tx) 7%,transparent),transparent),var(--bg);
-    min-height: 100vh;
-}
-
-/* Título do painel alinhado ao ícone e maior (22px). */
-h1 {
-    display: flex;
-    align-items: center;
-    font-size: 22px;
-    letter-spacing: -.02em;
-}
-
-/* Ícone antes do título: gradiente cônico com as quatro cores do jogo. */
-h1::before {
-    content: '';
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    border-radius: 5px;
-    background: conic-gradient(#2f6fdb 0 25%,#e8b923 0 50%,#2fa35b 0 75%,#d94141 0);
-    box-shadow: 0 2px 6px rgba(0,0,0,.25);
-}
-
-/* Cartões mais arredondados e com sombra suave. */
-.card {
-    border-radius: 16px;
-    box-shadow: 0 10px 30px -14px rgba(0,0,0,.35);
-}
-
-/* Tabuleiro: espaçamento maior entre células, cantos arredondados e recorte do conteúdo. */
-#board {
-    gap: 2px;
-    border-radius: 8px;
-    border-width: 3px;
     overflow: hidden;
-    /* Habilita unidades cqw (relativas à largura do tabuleiro), usadas no tamanho dos símbolos. */
+    touch-action: manipulation;
     container-type: inline-size;
+    box-shadow: inset 0 3px 8px rgba(80,30,0,.4);
 }
 
-/* Células arredondadas, com transição suave de cor. */
-#board div {
-    border-radius: 3px;
-    transition: background .12s;
-}
-
-/* Cartões do placar mais arredondados, com transição e texto em negrito. */
-.sc {
-    border-radius: 12px;
-    background: var(--bg);
-    transition: .2s;
-    font-weight: 600;
-}
-
-/* Jogador da vez: borda e brilho na cor do jogador (currentColor) e leve elevação. */
-.sc.on {
-    border-color: currentColor;
-    box-shadow: 0 6px 16px -8px currentColor;
-    transform: translateY(-2px);
-}
-
-/* Número do placar maior. */
-.sc b {
-    font-size: 20px;
-    letter-spacing: -.02em;
-}
-
-/* Status em formato de cartão arredondado, com fundo e borda. */
-#status {
-    padding: 9px 14px;
-    border-radius: 10px;
-    background: var(--bg);
-    border: 1px solid var(--ln);
-    font-size: 14px;
-}
-
-/* Peças da bandeja com cantos mais arredondados e transições. */
-.pc {
-    background: var(--bg);
-    border-color: var(--ln);
-    border-radius: 8px;
-    transition: transform .15s,border-color .15s,box-shadow .15s;
-}
-
-/* Peça sob o mouse: sobe levemente. */
-.pc:hover {
-    transform: translateY(-2px);
-    border-color: var(--mt);
-}
-
-/* Peça selecionada: borda e sombra. */
-.pc.sel {
-    border-color: var(--tx);
-    box-shadow: 0 6px 14px -8px var(--tx);
-}
-
-/* Botões em negrito, com transições. */
-button {
-    font-weight: 600;
-    transition: transform .12s,background .15s,border-color .15s;
-}
-
-/* Botão sob o mouse: sobe 1px e a borda escurece. */
-button:hover {
-    border-color: var(--mt);
-    transform: translateY(-1px);
-}
-
-/* Botão pressionado: volta à posição normal. */
-button:active {
-    transform: none;
-}
-
-/* Contorno azul para navegação pelo teclado (acessibilidade). */
-button:focus-visible,
-.pc:focus-visible {
-    outline: 2px solid #2f6fdb;
-    outline-offset: 2px;
-}
-
-/* Botão "Novo jogo" em destaque (cores invertidas). */
-#new {
-    background: var(--tx);
-    color: var(--bg);
-    border-color: var(--tx);
-}
-
-/* Fundo da tela inicial com brilho azul sutil. */
-#intro {
-    background: radial-gradient(900px 500px at 50% 0%,color-mix(in srgb,#2f6fdb 14%,transparent),transparent),var(--bg);
-}
-
-/* Entrada animada do conteúdo da tela inicial (animação "up"). */
-.ib {
-    animation: up .5s ease both;
-}
-
-/* Animação "up": surge subindo 12px (tela inicial e tela final). */
-@keyframes up {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-}
-
-/* Logotipo maior (quadrados de 44px). */
-.logo {
-    grid-template-columns: repeat(2,44px);
-    width: 92px;
-}
-
-/* Quadrados do logotipo com relevo e sombra. */
-.logo i {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    box-shadow: inset 0 0 0 3px rgba(255,255,255,.3),inset 0 -5px 0 rgba(0,0,0,.2),0 6px 14px -6px rgba(0,0,0,.4);
-}
-
-/* Título da tela inicial maior e centralizado. */
-.ib h1 {
-    justify-content: center;
-    font-size: 42px;
-    letter-spacing: -.03em;
-}
-
-/* Oculta o ícone do título na tela inicial. */
-.ib h1::before {
-    display: none;
-}
-
-/* Botões de modo como cartões, com faixa colorida à esquerda. */
-.mode button {
-    background: var(--sf);
-    border-radius: 12px;
-    text-align: left;
-    padding: 14px 16px;
-    border-left: 5px solid var(--tx);
-}
-
-/* Cor da faixa por posição do botão: 1º azul. (As regras com [data-h], mais abaixo, têm a mesma especificidade e, vindo depois, prevalecem.) */
-.mode button:nth-child(1) {
-    border-left-color: #2f6fdb;
-}
-
-/* 2º botão: faixa amarela. */
-.mode button:nth-child(2) {
-    border-left-color: #e8b923;
-}
-
-/* 3º botão: faixa verde. */
-.mode button:nth-child(3) {
-    border-left-color: #2fa35b;
-}
-
-/* Botão de modo sob o mouse: sobe e ganha sombra. */
-.mode button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 18px -10px rgba(0,0,0,.4);
-}
-
-/* Cor da faixa por número de jogadores (atributo data-h) e por id: azul para 1 e 2 jogadores. */
-.mode button[data-h="1"],
-.mode button[data-h="2"] {
-    border-left-color: #2f6fdb;
-}
-
-/* Amarelo: "Multiplayer local" e 3 jogadores. */
-#mp,
-.mode button[data-h="3"] {
-    border-left-color: #e8b923;
-}
-
-/* Verde: 4 jogadores. */
-.mode button[data-h="4"] {
-    border-left-color: #2fa35b;
-}
-
-/* Vermelho: "Continuar partida". */
-#rs {
-    border-left-color: #d94141;
-}
-
-/* ==========================================================================
-   6. TELA DE FIM DE JOGO
-   Camada sobre o jogo com o vencedor e a tabela de pontuação (.eb também é usada no tutorial).
-   ========================================================================== */
-
-/* Tela final: camada sobre o jogo, com fundo translúcido e desfoque. */
-#end {
-    position: fixed;
-    inset: 0;
-    z-index: 15;
-    background: color-mix(in srgb,var(--bg) 78%,transparent);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
-    overflow: auto;
-    transition: opacity .3s;
-}
-
-/* Tela final oculta. */
-#end.off {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Caixa (cartão) do resultado e do tutorial. */
-.eb {
-    background: var(--sf);
-    border: 1px solid var(--ln);
-    border-radius: 18px;
-    padding: 22px 20px;
-    max-width: 440px;
-    width: 100%;
-    margin: auto;
-    text-align: center;
-    box-shadow: 0 20px 50px -18px rgba(0,0,0,.5);
-    animation: up .5s ease both;
-}
-
-/* Título do resultado. */
-.eb h2 {
-    margin: 4px 0 4px;
-    font-size: 26px;
-    letter-spacing: -.02em;
-}
-
-/* Troféu (emoji). */
-.eb .trophy {
-    font-size: 40px;
-    line-height: 1;
-}
-
-/* Texto auxiliar. */
-.eb p {
-    margin: 0;
-    color: var(--mt);
-    font-size: 13px;
-}
-
-/* Tabela de pontuação. */
-.eb table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 14px;
-}
-
-/* Cabeçalho da tabela. */
-.eb th {
-    color: var(--mt);
-    font-weight: 600;
-    font-size: 12px;
-    text-align: center;
-    padding: 6px 4px;
-    border-bottom: 1px solid var(--ln);
-}
-
-/* Células da tabela. */
-.eb td {
-    padding: 10px 4px;
-    text-align: center;
-    border-bottom: 1px solid var(--ln);
-}
-
-/* Coluna do nome do jogador: alinhada à esquerda. */
-.eb td:nth-child(2),
-.eb th:nth-child(2) {
-    text-align: left;
-}
-
-/* Linha do vencedor: negrito e fundo suave. */
-.eb tr.win td {
-    font-weight: 700;
-    background: color-mix(in srgb,var(--tx) 6%,transparent);
-}
-
-/* Quadradinho colorido ao lado do nome do jogador. */
-.eb .dot {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-    margin-right: 8px;
-    vertical-align: -1px;
-}
-
-/* ==========================================================================
-   7. BOTÃO DE SOM
-   ========================================================================== */
-
-/* Botão redondo de som, fixo no canto superior direito (acima da tela inicial). */
-#mute {
-    position: fixed;
-    top: calc(10px + env(safe-area-inset-top,0px));
-    right: 10px;
-    z-index: 30;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border-radius: 50%;
-    font-size: 18px;
-    line-height: 1;
-}
-
-/* ==========================================================================
-   8. ESCOLHA DE COR E DIFICULDADE (TELA INICIAL)
-   ========================================================================== */
-
-/* Bloco de escolha (cor e dificuldade) na tela inicial. */
-.pick {
-    margin: 18px 0 0;
-    color: var(--mt);
-    font-size: 13px;
-}
-
-/* Rótulo do bloco. */
-.pick small {
-    display: block;
-    margin-bottom: 8px;
-}
-
-/* Fileira de botões de cor. */
-#pk {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-}
-
-/* Botão de cor: quadrado colorido com relevo. */
-.sw {
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border-radius: 10px;
-    border: 3px solid transparent;
-    box-shadow: inset 0 0 0 3px rgba(255,255,255,.3),inset 0 -5px 0 rgba(0,0,0,.2);
-}
-
-/* Cor escolhida: borda e leve ampliação. */
-.sw.on {
-    border-color: var(--tx);
-    transform: scale(1.12);
-}
-
-/* ==========================================================================
-   9. SÍMBOLOS, TOQUE E ANIMAÇÃO DE PEÇAS
-   Símbolos para daltônicos sobre as peças, gestos de arrastar e animação da peça recém-colocada.
-   ========================================================================== */
-
-/* Células posicionadas (para receber o símbolo sobreposto) e sem tamanho mínimo, para não alargar a grade. */
 #board div {
     position: relative;
     min-width: 0;
     min-height: 0;
+    background: var(--cell);
+    border-radius: 4px;
+    transition: background .12s;
 }
 
-/* Símbolo (●, ■, ▲, ◆) desenhado sobre a célula, fora do fluxo para não deformar o tabuleiro; o texto vem do atributo data-s. */
+/* Brilho nos blocos preenchidos (células com cor definida pelo script). */
+#board div[style*="background: rgb"]::before {
+    content: '';
+    position: absolute;
+    left: 14%; top: 10%;
+    width: 60%; height: 28%;
+    border-radius: 40%;
+    background: rgba(255,255,255,.35);
+    pointer-events: none;
+}
+
+/* Símbolo (●, ■, ▲, ◆) para daltônicos. */
 #board div::after {
     content: attr(data-s);
     position: absolute;
     inset: 0;
     display: grid;
     place-items: center;
-    /* Tamanho de reserva para navegadores sem suporte a cqw. */
     font-size: 11px;
-    /* Tamanho proporcional à largura do tabuleiro, entre 7px e 14px. */
     font-size: clamp(7px,2.4cqw,14px);
     line-height: 1;
-    color: rgba(255,255,255,.92);
+    color: rgba(255,255,255,.95);
+    text-shadow: 0 1px 0 rgba(0,0,0,.25);
     pointer-events: none;
     overflow: hidden;
 }
 
-/* Peças da bandeja: desativa gestos do navegador (rolagem e zoom) para permitir arrastar. */
-.pc {
-    touch-action: none;
+.pop { animation: pop .35s ease; }
+@keyframes pop { 0% { transform: scale(.3); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* 4. PLACAR, STATUS E BANDEJA ---------------------------------------------- */
+#score {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-/* Miniquadrado posicionado para receber o símbolo. */
+.sc {
+    border: 3px solid var(--bd);
+    border-radius: 14px;
+    padding: 6px 4px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(var(--b1),var(--b2));
+    box-shadow: 0 3px 0 var(--sh);
+    transition: .2s;
+}
+
+.sc b { display: block; font-size: 28px; line-height: 1.1; text-shadow: 0 2px 0 rgba(255,255,255,.5); }
+.sc span { font-size: 13px; }
+
+/* Jogador da vez: borda vermelha/colorida com brilho. */
+.sc.on {
+    border-color: currentColor;
+    background: linear-gradient(#fff,color-mix(in srgb,currentColor 18%,#fff1cf));
+    box-shadow: 0 0 0 3px color-mix(in srgb,currentColor 30%,transparent), 0 8px 16px -6px currentColor;
+    transform: translateY(-2px);
+}
+
+.sc.out { opacity: .5; }
+
+#status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 12px;
+    min-height: 30px;
+    padding: 0;
+    background: none;
+    border: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+#status::before { content: '▶'; color: #e0412f; font-size: 22px; }
+
+#tray {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.pc {
+    display: grid;
+    gap: 0;
+    grid-auto-rows: 11px;
+    align-content: start;
+    align-self: flex-start;
+    padding: 8px 10px;
+    border: 3px solid var(--bd);
+    border-radius: 14px;
+    background: linear-gradient(var(--b1),var(--b2));
+    box-shadow: 0 3px 0 var(--sh);
+    cursor: pointer;
+    touch-action: none;
+    transition: transform .15s,border-color .15s,box-shadow .15s;
+}
+
+.pc:hover { transform: translateY(-2px); }
+.pc.sel { border-color: #e0412f; box-shadow: 0 0 0 3px rgba(224,65,47,.35), 0 3px 0 var(--sh); }
+.pc.used { display: none; }
+
 .pc i {
     position: relative;
+    display: block;
+    width: 11px;
+    height: 11px;
     font-style: normal;
+    border-radius: 2px;
 }
 
-/* Símbolo sobre o miniquadrado da bandeja. */
+.pc i[style] { box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -2px 0 rgba(0,0,0,.2); }
+
 .pc i::after {
     content: attr(data-s);
     position: absolute;
@@ -798,259 +256,288 @@ button:focus-visible,
     place-items: center;
     font-size: 8px;
     line-height: 1;
-    color: rgba(255,255,255,.9);
+    color: rgba(255,255,255,.95);
 }
 
-/* Animação de "surgir" aplicada às células da peça recém-colocada. */
-.pop {
-    animation: pop .35s ease;
-}
+/* 5. BOTÕES E CONTROLES ---------------------------------------------------- */
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-/* Animação "pop": a peça cresce de 30% a 118% e assenta em 100%. */
-@keyframes pop {
-    0% {
-        transform: scale(.3);
-    }
-
-    60% {
-        transform: scale(1.18);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* ==========================================================================
-   10. COMPONENTES ADICIONAIS: DIFICULDADE, ESTATÍSTICAS E VOLUME
-   ========================================================================== */
-
-/* Grupo de botões segmentados (dificuldade da CPU). */
-.seg {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-}
-
-/* Botão do grupo segmentado. */
-.seg button {
+button, select {
+    font: inherit;
+    font-weight: 600;
     padding: 8px 14px;
+    border-radius: 14px;
+    border: 3px solid var(--bd);
+    background: linear-gradient(var(--b1),var(--b2));
+    color: var(--tx);
+    box-shadow: 0 3px 0 var(--sh);
+    cursor: pointer;
+    transition: transform .12s,filter .15s,box-shadow .12s;
 }
 
-/* Dificuldade escolhida: cores invertidas. */
-.df.on {
-    background: var(--tx);
-    color: var(--bg);
-    border-color: var(--tx);
+button:hover { filter: brightness(1.06); transform: translateY(-1px); }
+button:active { transform: translateY(3px); box-shadow: 0 0 0 var(--sh); }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, .pc:focus-visible { outline: 3px solid #2f6fdb; outline-offset: 2px; }
+
+/* "Novo jogo": botão verde brilhante. */
+#new {
+    margin-left: auto;
+    padding: 12px 22px;
+    font-size: 20px;
+    color: #fff;
+    background: linear-gradient(#9be85a,#3fa51f);
+    border-color: #2f7d14;
+    box-shadow: 0 4px 0 #276610, inset 0 2px 0 rgba(255,255,255,.4);
+    text-shadow: 0 2px 0 #1f5a0c;
 }
+#new::before { content: '▶ '; font-size: 16px; }
 
-/* Estatísticas salvas, exibidas na tela inicial. */
-.stt {
-    color: var(--mt);
-    font-size: 13px;
-    margin: 0 0 12px;
+.hint { color: var(--mt); font-size: 13px; margin-top: 12px; }
+
+.vol { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--mt); }
+.vol input { width: 110px; accent-color: #e0412f; }
+
+/* Botões redondos de pausa e reinício (canto superior esquerdo). */
+.rb {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top,0px));
+    z-index: 30;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    background: linear-gradient(#ffe9a8,#f2b955);
+    border: 4px solid #8a4e1c;
+    box-shadow: 0 4px 0 #6a3a12, inset 0 2px 0 rgba(255,255,255,.5);
+    color: #5a2d0c;
 }
+#pz { left: 10px; }
+#rst { left: 68px; }
+body:has(#intro:not(.off)) .rb { display: none; }
 
-/* Botão "Como jogar". */
-#how {
-    margin: 0 0 16px;
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(16px + env(safe-area-inset-bottom,0px));
+    transform: translate(-50%,20px);
+    background: #5a2d0c;
+    color: #ffeccb;
+    border: 3px solid #f2b955;
+    padding: 10px 18px;
+    border-radius: 16px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: .25s;
+    z-index: 50;
+    max-width: 90vw;
+    text-align: center;
 }
+#toast.on { opacity: 1; transform: translate(-50%,0); }
 
-/* Controle de volume com rótulo. */
-.vol {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--mt);
-}
-
-/* Largura do controle deslizante. */
-.vol input {
-    width: 110px;
-}
-
-/* ==========================================================================
-   11. TUTORIAL "COMO JOGAR"
-   ========================================================================== */
-
-/* Tutorial: camada sobre tudo (z-index 40), com fundo translúcido e desfoque. */
-#tut {
+/* 6. MENU INICIAL ---------------------------------------------------------- */
+#intro {
     position: fixed;
     inset: 0;
-    z-index: 40;
-    background: color-mix(in srgb,var(--bg) 85%,transparent);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
     overflow: auto;
+    transition: opacity .25s;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cpath d='M70 30l11 22 24 4-17 17 4 24-22-12-22 12 4-24-17-17 24-4z' fill='%23fff' fill-opacity='.09'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.35),transparent 60%),
+        radial-gradient(ellipse at 50% 120%,rgba(90,40,0,.4),transparent 60%),
+        var(--bg);
 }
+#intro.off { opacity: 0; pointer-events: none; }
 
-/* Miniatura de tabuleiro usada no tutorial. */
-.mg {
-    display: inline-grid;
-    gap: 2px;
-    margin: 8px 10px;
-}
-
-/* Quadrado vazio da miniatura. */
-.mg i {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    background: var(--cell);
-}
-
-/* Peça existente (azul). */
-.mg i.b {
-    background: #2f6fdb;
-}
-
-/* Peça sugerida: semitransparente, com contorno tracejado. */
-.mg i.g {
-    background: #2f6fdb;
-    opacity: .55;
-    outline: 2px dashed #2f6fdb;
-}
-
-/* Posição inválida (cinza). */
-.mg i.x {
-    background: #888;
-    opacity: .7;
-}
-
-/* ==========================================================================
-   12. PAINEL DE TRILHAS SONORAS
-   ========================================================================== */
-
-/* Botão ♪ (redondo), ao lado do botão de som. */
-#trk {
-    position: fixed;
-    top: calc(10px + env(safe-area-inset-top,0px));
-    right: 58px;
-    z-index: 30;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border-radius: 50%;
-    font-size: 18px;
-    line-height: 1;
-}
-
-/* Painel flutuante para escolher a trilha de cada tela. */
-#trkp {
-    position: fixed;
-    top: calc(58px + env(safe-area-inset-top,0px));
-    right: 10px;
-    z-index: 30;
-    display: grid;
-    gap: 10px;
-    width: min(280px,calc(100vw - 20px));
-}
-
-/* Rótulo de cada seletor de trilha. */
-#trkp label {
-    display: grid;
-    gap: 4px;
-    font-size: 13px;
-    color: var(--mt);
-}
-
-/* Seletor de trilha em largura total. */
-#trkp select {
+/* Caixa central: pergaminho. */
+.ib {
+    max-width: 440px;
     width: 100%;
-}
-
-/* ==========================================================================
-   13. CONTROLE (GAMEPAD)
-   Foco visível durante o uso do controle e painel de configuração/teste.
-   ========================================================================== */
-
-/* Com o controle em uso (classe gpm no body): contorno grosso no botão ou peça em foco. */
-body.gpm button:focus,
-body.gpm .pc:focus {
-    outline: 3px solid #2f6fdb;
-    outline-offset: 2px;
-}
-
-/* Botão 🎮 (redondo), ao lado do botão de trilhas. */
-#gpb {
-    position: fixed;
-    top: calc(10px + env(safe-area-inset-top,0px));
-    right: 106px;
-    z-index: 30;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border-radius: 50%;
-    font-size: 18px;
-    line-height: 1;
-}
-
-/* Painel de configuração e teste do controle; rola se for mais alto que a janela. */
-#gpp {
-    position: fixed;
-    top: calc(58px + env(safe-area-inset-top,0px));
-    right: 10px;
-    z-index: 31;
-    display: grid;
-    gap: 10px;
-    width: min(330px,calc(100vw - 20px));
-    max-height: calc(100vh - 80px);
-    overflow: auto;
-}
-
-/* Rótulo dos ajustes do controle. */
-#gpp label {
-    display: grid;
-    gap: 4px;
-    font-size: 13px;
-    color: var(--mt);
-}
-
-/* Seletor em largura total. */
-#gpp select {
-    width: 100%;
-}
-
-/* Grade de comandos remapeáveis (2 colunas). */
-.gpg {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-}
-
-/* Botão de um comando. */
-.gpg button {
-    padding: 6px 8px;
-    font-size: 13px;
-    text-align: left;
-}
-
-/* Comando aguardando um novo botão do controle. */
-.gpg button.on {
-    background: var(--tx);
-    color: var(--bg);
-}
-
-/* Indicador numérico de um botão do controle (teste). */
-.gpd {
-    display: inline-block;
-    width: 22px;
-    height: 22px;
-    line-height: 22px;
+    margin: auto;
+    padding: 22px 20px;
     text-align: center;
-    font-size: 11px;
-    border-radius: 5px;
-    background: var(--cell);
-    margin: 1px;
+    background: linear-gradient(var(--sf),color-mix(in srgb,var(--sf) 88%,#e8a850));
+    border: 5px solid var(--ln);
+    border-radius: 26px;
+    box-shadow: 0 18px 40px -14px rgba(60,20,0,.7), inset 0 0 0 2px rgba(255,255,255,.35);
+    outline: 2px dashed color-mix(in srgb,var(--ln) 70%,transparent);
+    outline-offset: -13px;
+    animation: up .5s ease both;
+}
+@keyframes up { from { opacity: 0; transform: translateY(12px); } }
+
+.logo {
+    display: grid;
+    grid-template-columns: repeat(2,52px);
+    gap: 4px;
+    width: 108px;
+    margin: 0 auto 8px;
+    transform: rotate(-6deg);
+    filter: drop-shadow(0 6px 6px rgba(60,20,0,.35));
+}
+.logo i {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,.4), inset 0 -6px 0 rgba(0,0,0,.2);
 }
 
-/* Botão do controle pressionado. */
-.gpd.on {
-    background: #2f6fdb;
+/* Título grande, branco com contorno marrom. */
+.ib h1 {
+    justify-content: center;
+    margin: 0 0 6px;
+    font-size: 54px;
     color: #fff;
+    text-shadow: 0 3px 0 #8a4e1c, 2px 0 0 #8a4e1c, -2px 0 0 #8a4e1c, 0 -2px 0 #8a4e1c, 0 7px 8px rgba(60,20,0,.35);
 }
+.ib h1::before { display: none; }
+.ib p { color: var(--mt); margin: 0; }
+
+.pick { margin: 16px 0 0; color: var(--mt); font-size: 14px; font-weight: 600; }
+.pick small { display: block; margin-bottom: 8px; font-size: 14px; }
+#pk { display: flex; gap: 12px; justify-content: center; }
+
+.sw {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 12px;
+    border: 4px solid #fff6dc;
+    box-shadow: 0 3px 0 rgba(60,20,0,.4), inset 0 0 0 3px rgba(255,255,255,.3), inset 0 -6px 0 rgba(0,0,0,.2);
+}
+.sw.on { border-color: #5a2d0c; transform: scale(1.14); }
+
+.seg { display: flex; gap: 8px; justify-content: center; }
+.seg button { padding: 8px 14px; }
+.df.on {
+    color: #fff;
+    background: linear-gradient(#ffb457,#ea7a1c);
+    border-color: #b4540a;
+    box-shadow: 0 3px 0 #8a3f06;
+    text-shadow: 0 2px 0 #8a3f06;
+}
+
+.mode { display: grid; gap: 10px; margin: 20px 0; }
+
+/* Botões de modo: grandes, coloridos e brilhantes. */
+.mode button {
+    padding: 14px 16px;
+    font-size: 20px;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,.3);
+    border-radius: 18px;
+    border-width: 4px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.4);
+}
+.mode small { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,.9); text-shadow: none; }
+.mode button[data-h="1"], .mode button[data-h="2"] { background: linear-gradient(#6ea8ff,#2f6fdb); border-color: #1f4fa3; }
+#mp, .mode button[data-h="3"] { background: linear-gradient(#ffe066,#e8a31f); border-color: #b87408; color: #5a2d0c; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+#mp small, .mode button[data-h="3"] small { color: #7a4a14; }
+.mode button[data-h="4"] { background: linear-gradient(#9be85a,#3fa51f); border-color: #2f7d14; }
+#rs { background: linear-gradient(#ff8a7a,#d94141); border-color: #a02525; }
+#back { background: linear-gradient(var(--b1),var(--b2)); border-color: var(--bd); color: var(--tx); text-shadow: none; }
+.mode button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+
+.stt { color: var(--mt); font-size: 14px; font-weight: 600; margin: 0 0 12px; }
+#how { margin: 0 0 16px; }
+
+.ib ul { text-align: left; color: var(--mt); font-size: 14px; padding-left: 20px; margin: 0; }
+
+/* 7. FIM DE JOGO E TUTORIAL ------------------------------------------------- */
+#end, #tut {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));
+    overflow: auto;
+    background: rgba(90,40,0,.55);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+#end { z-index: 15; transition: opacity .3s; }
+#end.off { opacity: 0; pointer-events: none; }
+#tut { z-index: 40; }
+
+.eb {
+    width: 100%;
+    max-width: 460px;
+    margin: auto;
+    padding: 22px 20px;
+    text-align: center;
+    background: linear-gradient(var(--sf),color-mix(in srgb,var(--sf) 88%,#e8a850));
+    border: 5px solid var(--ln);
+    border-radius: 26px;
+    box-shadow: 0 20px 50px -14px rgba(40,10,0,.8), inset 0 0 0 2px rgba(255,255,255,.35);
+    outline: 2px dashed color-mix(in srgb,var(--ln) 70%,transparent);
+    outline-offset: -13px;
+    animation: up .5s ease both;
+}
+
+.eb h2 { margin: 4px 0; font-size: 30px; text-shadow: 0 2px 0 rgba(255,255,255,.5); }
+.eb .trophy { font-size: 64px; line-height: 1; animation: bounce 1.2s ease-in-out infinite; filter: drop-shadow(0 6px 4px rgba(60,20,0,.35)); }
+@keyframes bounce { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+.eb p { margin: 0; color: var(--mt); font-size: 14px; }
+
+.eb table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin: 12px 0; font-size: 15px; font-weight: 600; }
+.eb th { color: var(--mt); font-size: 12px; padding: 4px; text-align: center; }
+.eb td { padding: 10px 4px; text-align: center; background: linear-gradient(var(--b1),var(--b2)); }
+.eb td:first-child { border-radius: 12px 0 0 12px; }
+.eb td:last-child { border-radius: 0 12px 12px 0; }
+.eb td:nth-child(2), .eb th:nth-child(2) { text-align: left; }
+.eb tr.win td { background: linear-gradient(#fff3b0,#f7c948); color: #5a2d0c; }
+.eb .dot { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; vertical-align: -2px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.2); }
+
+/* Miniaturas do tutorial. */
+.mg { display: inline-grid; gap: 3px; margin: 8px 10px; }
+.mg i { width: 26px; height: 26px; border-radius: 6px; background: var(--cell); }
+.mg i.b { background: #2f6fdb; box-shadow: inset 0 -4px 0 rgba(0,0,0,.2); }
+.mg i.g { background: #2f6fdb; opacity: .55; outline: 2px dashed #2f6fdb; }
+.mg i.x { background: #888; opacity: .7; }
+
+/* 8. TRILHAS, CONTROLE E BOTÕES FLUTUANTES --------------------------------- */
+#mute, #trk, #gpb {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top,0px));
+    z-index: 30;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 18px;
+    line-height: 1;
+    border-width: 4px;
+}
+#mute { right: 10px; }
+#trk { right: 62px; }
+#gpb { right: 114px; }
+
+#trkp, #gpp {
+    position: fixed;
+    top: calc(64px + env(safe-area-inset-top,0px));
+    right: 10px;
+    display: grid;
+    gap: 10px;
+}
+#trkp { z-index: 30; width: min(280px,calc(100vw - 20px)); }
+#gpp { z-index: 31; width: min(330px,calc(100vw - 20px)); max-height: calc(100vh - 90px); overflow: auto; }
+#trkp label, #gpp label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--mt); }
+#trkp select, #gpp select { width: 100%; }
+
+body.gpm button:focus, body.gpm .pc:focus { outline: 3px solid #2f6fdb; outline-offset: 2px; }
+
+.gpg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.gpg button { padding: 6px 8px; font-size: 13px; text-align: left; }
+.gpg button.on { background: var(--tx); color: var(--bg); }
+.gpd { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; font-size: 11px; border-radius: 5px; background: var(--cell); margin: 1px; }
+.gpd.on { background: #2f6fdb; color: #fff; }
