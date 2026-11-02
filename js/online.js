@@ -5,7 +5,7 @@
  */
 
 // Endereço do servidor. Local: 'ws://localhost:3000'. Publicado: 'wss://SEU-APP.onrender.com' (use wss, não ws).
-const SERVER = 'ws://localhost:3000';
+const SERVER = 'wss://blocos-7b9m.onrender.com';
 
 // Estado da conexão: on = em sala; seat = minha cor (1 a 4); host = sou o anfitrião;
 // seats = quais cores têm jogador conectado; go = autoriza init() a iniciar; started = partida em andamento.
